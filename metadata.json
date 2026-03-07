@@ -1,0 +1,5 @@
+{
+  "name": "Voice Automation Console",
+  "description": "A dashboard for managing and monitoring a voice and text automation system.",
+  "requestFramePermissions": []
+}
