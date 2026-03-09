@@ -18,9 +18,27 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@frontend/*": [
+        "./src/frontend/*"
+      ],
+      "@backend/*": [
+        "./src/backend/*"
+      ],
+      "@shared/*": [
+        "./src/shared/*"
       ]
     },
     "allowImportingTsExtensions": true,
     "noEmit": true
-  }
+  },
+  "include": [
+    "src/**/*",
+    "vite.config.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "tests"
+  ]
 }

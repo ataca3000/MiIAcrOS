@@ -2,89 +2,9 @@ import React, {useState, useEffect, useRef} from 'react';
 import {Mic, Send, Square, ChevronDown, ChevronUp, Settings, X, Download, BookOpen, MessageSquare} from 'lucide-react';
 import {motion} from 'motion/react';
 import {GoogleGenAI} from '@google/genai';
+import BACKEND_SCRIPT from '../backend/karen_backend.py?raw';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
-
-const BACKEND_SCRIPT = `
-import asyncio
-import websockets
-import json
-import requests
-from bs4 import BeautifulSoup
-import os
-
-def call_gemini(prompt, api_key):
-    # Simplified Gemini call for the router
-    return {"action": "analizar_codigo", "params": {"archivo": "main.py"}}
-
-def call_ollama(prompt, model):
-    # Call local Ollama API
-    response = requests.post(f"http://localhost:11434/api/generate", json={"model": model, "prompt": prompt})
-    # Parse response and return JSON action
-    return {"action": "refactorizar_funcion", "params": {"archivo": "main.py"}}
-
-async def handler(websocket):
-    async for message in websocket:
-        try:
-            data = json.loads(message)
-            action = data.get("command")
-            params = data.get("params", {})
-
-            if action == "ejecutar_ai":
-                prompt = params.get("prompt")
-                model = params.get("model")
-                api_key = params.get("api_key")
-                
-                if model == "gemini":
-                    result = call_gemini(prompt, api_key)
-                else:
-                    result = call_ollama(prompt, model)
-                
-                await websocket.send(json.dumps({"response": f"Ejecutando: {result['action']}", "action": result}))
-
-            elif action == "resumir_web":
-                url = params.get("url")
-                if not url:
-                    await websocket.send(json.dumps({"response": "Error: URL no proporcionada."}))
-                    continue
-                
-                try:
-                    response = requests.get(url, timeout=10)
-                    response.raise_for_status()
-                    
-                    soup = BeautifulSoup(response.text, 'html.parser')
-                    for script in soup(["script", "style"]):
-                        script.extract()
-                    
-                    texto = soup.get_text(separator=' ', strip=True)
-                    
-                    if len(texto) < 100:
-                        raise ValueError("Contenido insuficiente para resumir.")
-
-                    resumen = f"Resumen de {url}: {texto[:500]}..."
-                    
-                    # Send summary back to frontend instead of writing directly
-                    await websocket.send(json.dumps({"response": "resumen_listo", "resumen": resumen}))
-
-                except Exception as e:
-                    await websocket.send(json.dumps({"response": f"Error: {str(e)}"}))
-            
-            elif action == "copiar_a_word":
-                import pyautogui
-                resumen = params.get("resumen")
-                pyautogui.write(resumen)
-                await websocket.send(json.dumps({"response": "Resumen copiado a Word."}))
-            
-        except Exception as e:
-            print(f"Error: {e}")
-
-async def main():
-    async with websockets.serve(handler, "localhost", 8765):
-        await asyncio.Future()
-
-if __name__ == "__main__":
-    asyncio.run(main())
-`;
 
 export default function App() {
   const [isListening, setIsListening] = useState(false);
